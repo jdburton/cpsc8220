@@ -61,8 +61,9 @@ int main()
 	assert(result == 32);
 
 	// Memory map framebuffer
-	kyouko3.u_framebuffer=mmap(0,result * 1024 * 1024,PROT_WRITE|PROT_READ,MAP_SHARED,fd, MMAP_FRAMEBUFFER));
+	kyouko3.u_framebuffer=mmap(0,result * 1024 * 1024,PROT_WRITE|PROT_READ,MAP_SHARED,fd, MMAP_FRAMEBUFFER);
 
+	/*
 	ioctl(fd,VMODE,GRAPHICS_ON);
 
 	for ( i = 200; i < 201 * 1024; i++)
@@ -70,7 +71,7 @@ int main()
 		U_WRITE_FB(i,0xff0000);
 	}
 
-	ioctl(FIFO_FLUSH,)
+	ioctl(FIFO_FLUSH,)*/
 	close(fd);
 	return 0;
 
