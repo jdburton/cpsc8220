@@ -16,7 +16,7 @@
 #include <sys/types.h>
 #include <sys/mman.h>
 #include <assert.h>
-#include "kyouko3-registers.h"
+#include "../kernelsrc/kyouko3-registers.h"
 
 
 
@@ -51,7 +51,7 @@ int main()
 	}
 	// Memory map device control region.
 	kyouko3.u_control_base=mmap(0,KYOUKO3_CONTROL_SIZE,PROT_WRITE|PROT_READ,MAP_SHARED,fd,MMAP_CONTROL);
-	result = U_READ_REG(DeviceRAM);
+	result = U_READ_REG(Device_RAM);
 	printf("RAM size in MB is: %d\n", result);
 	assert(result == 32);
 
