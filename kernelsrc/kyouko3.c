@@ -144,7 +144,7 @@ static int kyouko3_mmap(struct file *filp, struct vm_area_struct *vma)
 	}
 	else
 	{
-		printk (KERN_ALERT "Invalid offset %x!\n", vma->vm_start)
+		printk (KERN_ALERT "Invalid offset %x!\n", vma->vm_start);
 		return -EAGAIN;
 	}
 
