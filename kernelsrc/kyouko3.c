@@ -32,15 +32,6 @@
 #define PCI_DEVICE_ID_KYOUKO3 0x1113
 #endif
 
-#define KYOUKO3_CONTROL_SIZE 65536
-#define DeviceRAM 0x0020
-
-enum
-{
-	MMAP_CONTROL = 0,
-	MMAP_FRAMEBUFFER = 0x8000
-};
-
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("James Burton");
@@ -54,9 +45,32 @@ struct kyouko3_dev
 	unsigned int  *k_control_base;
 	unsigned int  *k_card_ram_base;
 	struct pci_dev * pci_dev;
+	unsigned int graphics_on;
+	struct fifo fifo;
 
 } kyouko3;
 
+
+struct fifo_entry
+
+{
+	u32 command;
+	u32 value;
+
+}
+
+
+struct fifo
+{
+	// physical base address
+	u64 p_base;
+	// kernel base address array
+	struct fifo_entry * k_base;
+	// head of fifo
+	u32 head;
+	// tail of fifo
+	u32 tail_cache;
+}
 
 
 unsigned int K_READ_REG(unsigned int reg)
@@ -79,6 +93,47 @@ unsigned int K_READ_REG(unsigned int reg)
 
 }
 
+void FIFO_WRITE(unsigned int reg, unsigned int value)
+{
+	kyouko3.fifo.k_base[kyouko3.fifo.head].command = reg;
+	kyouko3.fifo.k_base[kyouko3.fifo.head].value = value;
+	kyouko3.fifo.head++;
+
+	if (kyouko3.fifo.head >= FIFO_ENTRIES)
+		kyouko3.fifo.head = 0;
+}
+
+static int kyouku3_init_fifo_intl()
+{
+	kyouko3.fifo.kbase = pci_alloc_consistent(
+					kyouko3.pci_dev,
+					8192u,
+					&kyouko3.fifo.p_base);
+
+	//Hardware has 1024 slots. Each has 8 bytes
+	//(command, value)
+
+	// load FifoStart with kyouko3.fifo.p_base
+	FIFO_WRITE(FifoStart,kyouko3.fifo.p_base);
+
+
+	// load FifoEnd with kyouko3.fifo.p_base + 8192
+	FIFO_WRITE(FifoEnd,kyouko3.fifo.p_base + 8192);
+
+	kyouko3.fifo.head = 0;
+	kyouko3.fifo.tail_cache = 0;
+
+	// pause
+
+	while(K_READ_REG(FifoTail) != 0) schedule();
+
+	// FifoTail is a registered. In the manual.
+
+	return 1;
+
+}
+
+
 int kyouko3_open(struct inode * inode, struct file * fp)
 {
 
@@ -96,6 +151,7 @@ int kyouko3_open(struct inode * inode, struct file * fp)
 	printk(KERN_ALERT "Opened device kyouko3\n");
 
  	//2.3.D (optional) Allocate and initialize FIFO
+	kyouku3_init_fifo_intl();
 
 	return 0;
 
@@ -112,6 +168,12 @@ int kyouko3_release(struct inode * inode, struct file * fp)
 	// 2.4.B - say "BUUH BYE"
 	printk(KERN_ALERT "BUUH BYE\n");
 	// 2.4.C If you have allocated FIFO, call pci_free_consistent
+	pci_free_consistent(
+						kyouko3.pci_dev,
+						8192u,
+						kyouko3.fifo.kbase,
+						kyouko3.fifo.p_base
+						);
 
 	return 0;
 
@@ -132,6 +194,7 @@ static int kyouko3_mmap(struct file *filp, struct vm_area_struct *vma)
 			return -EAGAIN;
 		}
 	}
+	// Map the framebuffer
 	else if (vma->vm_pgoff << PAGE_SHIFT == MMAP_FRAMEBUFFER)
 	{
 		if (io_remap_pfn_range(vma, vma->vm_start, kyouko3.p_card_ram_base >> PAGE_SHIFT,
@@ -194,6 +257,81 @@ int kyouko3_probe(struct pci_dev * pci_dev, const struct pci_device_id * pci_id)
 
 }
 
+static void kyouku3_fifo_flush_intl()
+{
+	K_WRITE_REG(FifoHead,kyouko3.fifo.head);
+	while(kyouko3.fifo.tail_cache != kyouko3.fifo.head)
+	{
+		kyouko3.fifo.tail_cache = K_READ_REG(FifoTail);
+		schedule();
+	}
+}
+
+int kyouko3_ioctl(stuct file * fp, unsigned int cmd, unsigned int arg)
+{
+	switch(cmd)
+	{
+		case VMODE:
+					if ( arg == GRAPHICS_ON)
+					{
+						//setframe 0
+						// set 5 registers at 0x8000
+							// columns = 1024
+							// rows = 768
+							// pitch = 1024 * 4
+							// format = 0xF888  // bits per channel
+							// address = 0
+						//set acceleration bitmask
+							// 0x40000000
+							// K_WRITE_REG it.
+						//set dac 0  - Digital Analog Converter
+							// width = 1024
+							// height = 768
+							// virtx = 0
+							// virty = 0
+							// frame = 0
+						//modeset register
+						msleep(10);
+						// load clear color reg.  - FIFO_WRITE
+						//
+						// needs 4 floats: RGBA between [0.0,1.0] written as ints.
+						// float one = 1.0
+						// one_cs_int = *(unsigned int *)&one;
+							// create REINTERPRET_CAST macro for this!
+						// FIFO_WRITE  0x03 to ClearBuffer register
+						// FIFO_WRITE 0x00 to Flush register
+						kyouko3.graphics_on = 1;
+					}
+					else
+					{
+						// write 0 to acceleration bitmask.
+						// write 0 to mode set.
+					}
+					break;
+		case FIFO_QUEUE:
+					// pull fifo entry from user space -> add to driver buffer
+					// user will pass address of entry in arg
+
+					ret = copy_from_user(
+						&entry,  // entry is driver side variable.
+						(struct fifo_entry *)arg,  // cast arg as struct fifo_entry *
+						sizeof(struct_fifo_entry));
+
+					// Might want to check to see if the queue is full.
+					FIFO_WRITE(entry.command, entry.value);
+
+					break;
+		case FIFO_FLUSH:
+					kyouku3_fifo_flush_intl();
+					break;
+
+		// see more in register list
+		case
+
+	}
+
+}
+
 
 int kyouko3_remove(void)
 {
@@ -206,7 +344,7 @@ struct file_operations kyouko3_fops =
 	.open = kyouko3_open,
 	.release = kyouko3_release,
 	.mmap = kyouko3_mmap,
-	// .unlocked_ioctl = kyouko3_ioctl,
+	.unlocked_ioctl = kyouko3_ioctl,
 	.owner = THIS_MODULE
 };
 

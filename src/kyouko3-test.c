@@ -16,15 +16,10 @@
 #include <sys/types.h>
 #include <sys/mman.h>
 #include <assert.h>
+#include "kyouko3-registers.h"
 
-#define KYOUKO3_CONTROL_SIZE 65536
-#define DeviceRAM 0x0020
 
-enum
-{
-	MMAP_CONTROL = 0,
-	MMAP_FRAMEBUFFER = 0x8000
-};
+
 
 struct u_kyouko3_dev
 {
@@ -63,9 +58,10 @@ int main()
 	// Memory map framebuffer
 	kyouko3.u_framebuffer=mmap(0,result * 1024 * 1024,PROT_WRITE|PROT_READ,MAP_SHARED,fd, MMAP_FRAMEBUFFER);
 
-	/*
-	ioctl(fd,VMODE,GRAPHICS_ON);
 
+
+	ioctl(fd,VMODE,GRAPHICS_ON);
+/*
 	for ( i = 200; i < 201 * 1024; i++)
 	{
 		U_WRITE_FB(i,0xff0000);

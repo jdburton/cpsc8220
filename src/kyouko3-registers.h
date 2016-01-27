@@ -86,16 +86,3 @@ enum{
 	_DVirtY = 0x000C,
 	_DFrame = 0x0010,
 };
-
-
-enum
-{
-	MMAP_CONTROL = 0,
-	MMAP_FRAMEBUFFER = 0x80000000
-};
-
-enum
-{
-	GRAPHICS_OFF = 0,
-	GRAPHICS_ON
-};
