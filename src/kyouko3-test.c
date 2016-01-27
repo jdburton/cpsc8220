@@ -15,6 +15,7 @@
 #include <errno.h>
 #include <sys/types.h>
 #include <sys/mman.h>
+#include <assert.h>
 
 #define KYOUKO3_CONTROL_SIZE 65536
 #define DeviceRAM 0x0020
@@ -22,6 +23,7 @@
 struct u_kyouko3_dev
 {
 	unsigned int * u_control_base;
+	unsigned int * u_framebuffer;
 
 } kyouko3;
 
@@ -46,9 +48,15 @@ int main()
 		printf("Cannot open /dev/kyouko3. Sorry.\n");
 		return fd;
 	}
+	// Memory map device control region.
 	kyouko3.u_control_base=mmap(0,KYOUKO3_CONTROL_SIZE,PROT_WRITE|PROT_READ,MAP_SHARED,fd,0);
 	result = U_READ_REG(DeviceRAM);
 	printf("RAM size in MB is: %d\n", result);
+	assert(result == 32);
+
+	// Memory map framebuffer
+	kyouko3.framebuffer=mmap(0,result * 1024 * 1024,PROT_WRITE|PROT_READ,MAP_SHARED,fd, 0x80000000);
+
 	close(fd);
 	return 0;
 

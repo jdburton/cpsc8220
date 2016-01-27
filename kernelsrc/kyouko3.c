@@ -18,7 +18,8 @@
 #include <asm/io.h>
 #include <asm/pgtable.h>
 #include <asm/delay.h>
-
+#include "kyouko3-registers.h"
+#include "kyouko3-utils.h"
 
 #define KYOUKO3_MAJOR 500
 #define KYOUKO3_MINOR 127

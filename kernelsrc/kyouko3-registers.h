@@ -36,7 +36,7 @@ struct kyouko2_dma_hdr {
 #define Device_RAM 0x0020
 #define Number_of_Frames 0x0024
 #define Number_of_DACS 0x0028
-#define Interna1_FIF0_Size 0x002C
+#define Internal_FIFO_Size 0x002C
 
 #define Reboot 0x1000
 #define Flags 0x1004
