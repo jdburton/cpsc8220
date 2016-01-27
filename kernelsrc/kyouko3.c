@@ -121,7 +121,7 @@ int kyouko3_release(struct inode * inode, struct file * fp)
 static int kyouko3_mmap(struct file *filp, struct vm_area_struct *vma)
 {
 
-	if (vma->vm_pgoff == MMAP_CONTROL)
+	if (vma->vm_pgoff << PAGE_SHIFT == MMAP_CONTROL)
 	{
 		// 2.5.A A kyouko3_mmap function that calls io_remap_pfn_range to provide user level access to the 64KB control region of the card
 		if (io_remap_pfn_range(vma, vma->vm_start, kyouko3.p_control_base >> PAGE_SHIFT,
@@ -132,7 +132,7 @@ static int kyouko3_mmap(struct file *filp, struct vm_area_struct *vma)
 			return -EAGAIN;
 		}
 	}
-	else if (vma->vm_pgoff == MMAP_FRAMEBUFFER)
+	else if (vma->vm_pgoff << PAGE_SHIFT == MMAP_FRAMEBUFFER)
 	{
 		if (io_remap_pfn_range(vma, vma->vm_start, kyouko3.p_card_ram_base >> PAGE_SHIFT,
 					vma->vm_end - vma->vm_start,
