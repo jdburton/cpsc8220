@@ -38,26 +38,13 @@ MODULE_AUTHOR("James Burton");
 
 struct cdev kyouko3_cdev;
 
-struct kyouko3_dev
-{
-	unsigned int  p_control_base;
-	unsigned int  p_card_ram_base;
-	unsigned int  *k_control_base;
-	unsigned int  *k_card_ram_base;
-	struct pci_dev * pci_dev;
-	unsigned int graphics_on;
-	struct fifo fifo;
-
-} kyouko3;
-
-
 struct fifo_entry
 
 {
 	u32 command;
 	u32 value;
 
-}
+};
 
 
 struct fifo
@@ -70,7 +57,20 @@ struct fifo
 	u32 head;
 	// tail of fifo
 	u32 tail_cache;
-}
+};
+
+struct kyouko3_dev
+{
+	unsigned int  p_control_base;
+	unsigned int  p_card_ram_base;
+	unsigned int  *k_control_base;
+	unsigned int  *k_card_ram_base;
+	struct pci_dev * pci_dev;
+	unsigned int graphics_on;
+	struct fifo fifo;
+
+} kyouko3;
+
 
 
 unsigned int K_READ_REG(unsigned int reg)
@@ -93,11 +93,33 @@ unsigned int K_READ_REG(unsigned int reg)
 
 }
 
+void K_WRITE_REG(unsigned int reg, unsigned int value)
+{
+	// hardware address to write to.
+	unsigned int * hw_reg;
+
+	// Why delay? Hardware can be flaky.
+	// delay for 1 us to let hardware catch up.
+
+	udelay(1);
+
+	rmb();  //read memory barrier
+
+	hw_reg = kyouko3.k_control_base + ( reg >> 2 );
+
+	*hw_reg = value;
+
+
+
+}
+
 void FIFO_WRITE(unsigned int reg, unsigned int value)
 {
 	kyouko3.fifo.k_base[kyouko3.fifo.head].command = reg;
 	kyouko3.fifo.k_base[kyouko3.fifo.head].value = value;
 	kyouko3.fifo.head++;
+
+	// TODO: read FIFO entries from card. Do this later.
 
 	if (kyouko3.fifo.head >= FIFO_ENTRIES)
 		kyouko3.fifo.head = 0;
@@ -114,11 +136,11 @@ static int kyouku3_init_fifo_intl()
 	//(command, value)
 
 	// load FifoStart with kyouko3.fifo.p_base
-	FIFO_WRITE(FifoStart,kyouko3.fifo.p_base);
+	K_WRITE_REG(FifoStart,kyouko3.fifo.p_base);
 
 
 	// load FifoEnd with kyouko3.fifo.p_base + 8192
-	FIFO_WRITE(FifoEnd,kyouko3.fifo.p_base + 8192);
+	K_WRITE_REG(FifoEnd,kyouko3.fifo.p_base + 8192);
 
 	kyouko3.fifo.head = 0;
 	kyouko3.fifo.tail_cache = 0;

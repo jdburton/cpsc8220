@@ -23,6 +23,8 @@ struct kyouko2_dma_hdr {
 #define FIFO_QUEUE _IOWR(0xcc,3,unsigned long)
 #define FIFO_FLUSH _I0(0xcc,4)
 
+#define FIFO_ENTRIES 1024
+
 // These are the registers ... really, just base offsets.
 
 #define Major_Version 0x0000
