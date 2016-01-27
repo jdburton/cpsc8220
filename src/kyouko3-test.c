@@ -55,7 +55,7 @@ int main()
 	assert(result == 32);
 
 	// Memory map framebuffer
-	kyouko3.framebuffer=mmap(0,result * 1024 * 1024,PROT_WRITE|PROT_READ,MAP_SHARED,fd, 0x80000000);
+	kyouko3.u_framebuffer=mmap(0,result * 1024 * 1024,PROT_WRITE|PROT_READ,MAP_SHARED,fd, 0x80000000);
 
 	close(fd);
 	return 0;
