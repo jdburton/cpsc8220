@@ -125,9 +125,9 @@ void FIFO_WRITE(unsigned int reg, unsigned int value)
 		kyouko3.fifo.head = 0;
 }
 
-static int kyouku3_init_fifo_intl()
+static int kyouku3_init_fifo_intl(void)
 {
-	kyouko3.fifo.kbase = pci_alloc_consistent(
+	kyouko3.fifo.k_base = pci_alloc_consistent(
 					kyouko3.pci_dev,
 					8192u,
 					&kyouko3.fifo.p_base);
@@ -165,10 +165,10 @@ int kyouko3_open(struct inode * inode, struct file * fp)
 	//2.3.A Uses ioremap to obtain a kernel virtual base for the control region
 	kyouko3.k_control_base = ioremap(kyouko3.p_control_base, KYOUKO3_CONTROL_SIZE);
 	//2.3.B Uses ioremap to obtain a kernel virtual base for the ram base
-	printk(KERN_ALERT "K_READ_REG(DeviceRAM) is %d\n",K_READ_REG(DeviceRAM));
+	printk(KERN_ALERT "K_READ_REG(Device_RAM) is %d\n",K_READ_REG(Device_RAM));
 //	printk(KERN_ALERT "K_READ_REG(KYOUKO3_CONTROL_SIZE) is %d\n",K_READ_REG(KYOUKO3_CONTROL_SIZE));
 
-	kyouko3.k_card_ram_base = ioremap(kyouko3.p_card_ram_base, K_READ_REG(DeviceRAM) * 1024 * 1024);
+	kyouko3.k_card_ram_base = ioremap(kyouko3.p_card_ram_base, K_READ_REG(Device_RAM) * 1024 * 1024);
 	//2.3.C uses printk to print an opened device message
 	printk(KERN_ALERT "Opened device kyouko3\n");
 
@@ -193,7 +193,7 @@ int kyouko3_release(struct inode * inode, struct file * fp)
 	pci_free_consistent(
 						kyouko3.pci_dev,
 						8192u,
-						kyouko3.fifo.kbase,
+						kyouko3.fifo.k_base,
 						kyouko3.fifo.p_base
 						);
 
@@ -279,7 +279,7 @@ int kyouko3_probe(struct pci_dev * pci_dev, const struct pci_device_id * pci_id)
 
 }
 
-static void kyouku3_fifo_flush_intl()
+static void kyouku3_fifo_flush_intl(void)
 {
 	K_WRITE_REG(FifoHead,kyouko3.fifo.head);
 	while(kyouko3.fifo.tail_cache != kyouko3.fifo.head)
@@ -289,7 +289,7 @@ static void kyouku3_fifo_flush_intl()
 	}
 }
 
-int kyouko3_ioctl(stuct file * fp, unsigned int cmd, unsigned int arg)
+long kyouko3_ioctl(struct file * fp, unsigned int cmd, unsigned long arg)
 {
 	switch(cmd)
 	{

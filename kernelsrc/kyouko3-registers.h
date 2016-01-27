@@ -4,7 +4,7 @@
 
 //
 
-#define KYOUK03_CONTROL_SIZE (65536)
+#define KYOUKO3_CONTROL_SIZE (65536)
 
 // DMA header:
 
