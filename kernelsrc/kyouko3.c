@@ -35,6 +35,12 @@
 #define KYOUKO3_CONTROL_SIZE 65536
 #define DeviceRAM 0x0020
 
+enum
+{
+	MMAP_CONTROL = 0,
+	MMAP_FRAMEBUFFER = 0x8000
+};
+
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("James Burton");
@@ -115,14 +121,32 @@ int kyouko3_release(struct inode * inode, struct file * fp)
 static int kyouko3_mmap(struct file *filp, struct vm_area_struct *vma)
 {
 
-	// 2.5.A A kyouko3_mmap function that calls io_remap_pfn_range to provide user level access to the 64KB control region of the card
-    if (io_remap_pfn_range(vma, vma->vm_start, kyouko3.p_control_base >> PAGE_SHIFT,
-                vma->vm_end - vma->vm_start,
-                vma->vm_page_prot))
-    {
+	if (vma->vm_start == MMAP_CONTROL)
+	{
+		// 2.5.A A kyouko3_mmap function that calls io_remap_pfn_range to provide user level access to the 64KB control region of the card
+		if (io_remap_pfn_range(vma, vma->vm_start, kyouko3.p_control_base >> PAGE_SHIFT,
+					vma->vm_end - vma->vm_start,
+					vma->vm_page_prot))
+		{
 
-        return -EAGAIN;
-    }
+			return -EAGAIN;
+		}
+	}
+	else if (vma->vm_start == MMAP_FRAMEBUFFER)
+	{
+		if (io_remap_pfn_range(vma, vma->vm_start, kyouko3.p_card_ram_base >> PAGE_SHIFT,
+					vma->vm_end - vma->vm_start,
+					vma->vm_page_prot))
+		{
+
+			return -EAGAIN;
+		}
+	}
+	else
+	{
+		printk (KERN_ALERT "Invalid offset %x!\n", vma->vm_start)
+		return -EAGAIN;
+	}
 
     return 0;
 }

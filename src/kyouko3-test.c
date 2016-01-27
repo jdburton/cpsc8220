@@ -20,6 +20,12 @@
 #define KYOUKO3_CONTROL_SIZE 65536
 #define DeviceRAM 0x0020
 
+enum
+{
+	MMAP_CONTROL = 0,
+	MMAP_FRAMEBUFFER = 0x8000
+};
+
 struct u_kyouko3_dev
 {
 	unsigned int * u_control_base;
@@ -49,14 +55,22 @@ int main()
 		return fd;
 	}
 	// Memory map device control region.
-	kyouko3.u_control_base=mmap(0,KYOUKO3_CONTROL_SIZE,PROT_WRITE|PROT_READ,MAP_SHARED,fd,0);
+	kyouko3.u_control_base=mmap(0,KYOUKO3_CONTROL_SIZE,PROT_WRITE|PROT_READ,MAP_SHARED,fd,MMAP_CONTROL);
 	result = U_READ_REG(DeviceRAM);
 	printf("RAM size in MB is: %d\n", result);
 	assert(result == 32);
 
 	// Memory map framebuffer
-	kyouko3.u_framebuffer=mmap(0,result * 1024 * 1024,PROT_WRITE|PROT_READ,MAP_SHARED,fd, 0x80000000);
+	kyouko3.u_framebuffer=mmap(0,result * 1024 * 1024,PROT_WRITE|PROT_READ,MAP_SHARED,fd, MMAP_FRAMEBUFFER));
 
+	ioctl(fd,VMODE,GRAPHICS_ON);
+
+	for ( i = 200; i < 201 * 1024; i++)
+	{
+		U_WRITE_FB(i,0xff0000);
+	}
+
+	ioctl(FIFO_FLUSH,)
 	close(fd);
 	return 0;
 
