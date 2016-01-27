@@ -21,7 +21,7 @@ struct kyouko2_dma_hdr {
 #define UNBIND_DMA _IOW(0xcc,5,unsigned long)
 #define START_DMA _IOWR(0xcc,2,unsigned long)
 #define FIFO_QUEUE _IOWR(0xcc,3,unsigned long)
-#define FIFO_FLUSH _I0(0xcc,4)
+#define FIFO_FLUSH _IO(0xcc,4)
 
 #define FIFO_ENTRIES 1024
 

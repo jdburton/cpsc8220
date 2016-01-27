@@ -15,6 +15,7 @@
 #include <linux/kernel_stat.h>
 #include <linux/fs.h>
 #include <linux/cdev.h>
+#include <linux/delay.h>
 #include <asm/io.h>
 #include <asm/pgtable.h>
 #include <asm/delay.h>
@@ -291,6 +292,7 @@ static void kyouku3_fifo_flush_intl(void)
 
 long kyouko3_ioctl(struct file * fp, unsigned int cmd, unsigned long arg)
 {
+	long ret = 0;
 	switch(cmd)
 	{
 		case VMODE:
@@ -330,6 +332,7 @@ long kyouko3_ioctl(struct file * fp, unsigned int cmd, unsigned long arg)
 						// write 0 to mode set.
 					}
 					break;
+		/*
 		case FIFO_QUEUE:
 					// pull fifo entry from user space -> add to driver buffer
 					// user will pass address of entry in arg
@@ -348,9 +351,10 @@ long kyouko3_ioctl(struct file * fp, unsigned int cmd, unsigned long arg)
 					break;
 
 		// see more in register list
-		case
+		*/
 
 	}
+	return ret;
 
 }
 
