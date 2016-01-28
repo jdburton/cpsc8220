@@ -65,6 +65,14 @@
 
 #define Clear_Color 0x5100
 
+/* Color offsets */
+enum {
+	_CRed = 0x0008,
+	_CGreen = 0x0004,
+	_CBlue = 0x0000,
+	_CAlpha = 0x000C,
+};
+
 #define Frame_Objects 0x8000
 
 #define DAC_Objects 0x9000

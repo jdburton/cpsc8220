@@ -29,6 +29,17 @@ struct u_kyouko3_dev
 } kyouko3;
 
 
+void U_WRITE_FB(unsigned int reg, unsigned int value)
+{
+	// framebuffer address to write to.
+	unsigned int * fb_reg;
+
+	fb_reg = kyouko3.u_framebuffer + ( reg >> 2 );
+
+	*fb_reg = value;
+
+}
+
 unsigned int U_READ_REG(unsigned int reg)
 {
 
@@ -37,10 +48,12 @@ unsigned int U_READ_REG(unsigned int reg)
 
 }
 
+
 int main()
 {
 
 	int fd;
+	int i;
 	int result;
 
 	fd = open("/dev/kyouko3",O_RDWR);
@@ -56,18 +69,21 @@ int main()
 	assert(result == 32);
 
 	// Memory map framebuffer
-	kyouko3.u_framebuffer=mmap(0,result * 1024 * 1024,PROT_WRITE|PROT_READ,MAP_SHARED,fd, MMAP_FRAMEBUFFER);
+	kyouko3.u_framebuffer=mmap(0,1024 * 768,PROT_WRITE|PROT_READ,MAP_SHARED,fd, MMAP_FRAMEBUFFER);
 
 
 
 	ioctl(fd,VMODE,GRAPHICS_ON);
-/*
-	for ( i = 200; i < 201 * 1024; i++)
+
+	for ( i = 200 * 1024; i < 201 * 1024; i++)
 	{
-		U_WRITE_FB(i,0xff0000);
+		U_WRITE_FB(i,0xff00ff);
 	}
 
-	ioctl(FIFO_FLUSH,)*/
+	ioctl(FIFO_FLUSH,0);
+	printf("Staying in graphics mode for 30 seconds\n");
+	sleep(30);
+	ioctl(fd,VMODE,GRAPHICS_OFF);
 	close(fd);
 	return 0;
 

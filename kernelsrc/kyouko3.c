@@ -129,7 +129,7 @@ void FIFO_WRITE(unsigned int reg, unsigned int value)
 	kyouko3.fifo.k_base[kyouko3.fifo.head].value = value;
 	kyouko3.fifo.head++;
 
-	// TODO: read FIFO entries from card. Do this later.
+	// TODO: read FIFO_ENTRIES from card. Do this later.
 
 	if (kyouko3.fifo.head >= FIFO_ENTRIES)
 		kyouko3.fifo.head = 0;
@@ -307,38 +307,81 @@ long kyouko3_ioctl(struct file * fp, unsigned int cmd, unsigned long arg)
 		case VMODE:
 					if ( arg == GRAPHICS_ON)
 					{
-						//setframe 0
+
+						printk(KERN_ALERT "Attempting to turn kyouko3 on!\n");
+						//set frame[0]
 						// set 5 registers at 0x8000
 							// columns = 1024
 							// rows = 768
 							// pitch = 1024 * 4
 							// format = 0xF888  // bits per channel
 							// address = 0
+
+						K_WRITE_REG(Frame_Objects+_FColumns,1024);
+						K_WRITE_REG(Frame_Objects+_FRows,768);
+						K_WRITE_REG(Frame_Objects+_FRowPitch,1024*4);
+						K_WRITE_REG(Frame_Objects+_FFormat,0xF888);
+						K_WRITE_REG(Frame_Objects+_FAddress,0);
+
 						//set acceleration bitmask
 							// 0x40000000
 							// K_WRITE_REG it.
+						K_WRITE_REG(Acceleration,0x40000000);
+
 						//set dac 0  - Digital Analog Converter
 							// width = 1024
 							// height = 768
 							// virtx = 0
 							// virty = 0
 							// frame = 0
+
+						K_WRITE_REG(DAC_Objects+_DWidth,1024);
+						K_WRITE_REG(DAC_Objects+_DHeight, 768);
+						K_WRITE_REG(DAC_Objects+_DVirtX,0);
+						K_WRITE_REG(DAC_Objects+_DVirtY,0);
+						K_WRITE_REG(DAC_Objects+_DFrame,0);
+
+
 						//modeset register
+						K_WRITE_REG(ModeSet,0);
+
+						// sleep
 						msleep(10);
 						// load clear color reg.  - FIFO_WRITE
 						//
+
 						// needs 4 floats: RGBA between [0.0,1.0] written as ints.
-						// float one = 1.0
-						// one_cs_int = *(unsigned int *)&one;
-							// create REINTERPRET_CAST macro for this!
+						float one = 1.0;
+						unsigned int one_cs_int = KYOUKO3_REINTERPRET_CAST(unsigned int, one);
+
+						FIFO_WRITE(Clear_Color+_CRed,one_cs_int);
+						FIFO_WRITE(Clear_Color+_CGreen,one_cs_int);
+						FIFO_WRITE(Clear_Color+_CBlue,one_cs_int);
+						FIFO_WRITE(Clear_Color+_CAlpha,0);
+
+
+
+
 						// FIFO_WRITE  0x03 to ClearBuffer register
+						FIFO_WRITE(Clear_Buffer,0x0003);
 						// FIFO_WRITE 0x00 to Flush register
+						FIFO_WRITE(Flush,0x0000);
+
+						kyouku3_fifo_flush_intl();
+
 						kyouko3.graphics_on = 1;
 					}
 					else
 					{
+						printk(KERN_ALERT "Attempting to turn kyouko3 off!\n");
 						// write 0 to acceleration bitmask.
+						K_WRITE_REG(Acceleration,0x80000000);
+
 						// write 0 to mode set.
+						K_WRITE_REG(ModeSet,0);
+						kyouku3_fifo_flush_intl();
+						kyouko3.graphics_on = 0;
+
 					}
 					break;
 		/*
@@ -355,12 +398,13 @@ long kyouko3_ioctl(struct file * fp, unsigned int cmd, unsigned long arg)
 					FIFO_WRITE(entry.command, entry.value);
 
 					break;
+					*/
 		case FIFO_FLUSH:
 					kyouku3_fifo_flush_intl();
 					break;
 
 		// see more in register list
-		*/
+
 
 	}
 	return ret;
