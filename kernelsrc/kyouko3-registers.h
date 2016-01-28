@@ -3,6 +3,7 @@
 // kyouko3 register list and ioctl codes
 
 //
+#include <asm/ioctl.h>
 
 
 #define KYOUKO3_CONTROL_SIZE (65536)
@@ -11,7 +12,7 @@
 
 
 
-#define VMODE _IOW(0xcc, 0,unsigned long)
+#define VMODE _IOW(0xcc, 0, unsigned long)
 #define BIND_DMA _IOW(0xcc,1,unsigned long)
 #define UNBIND_DMA _IOW(0xcc,5,unsigned long)
 #define START_DMA _IOWR(0xcc,2,unsigned long)

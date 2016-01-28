@@ -16,7 +16,7 @@
 #include <sys/types.h>
 #include <sys/mman.h>
 #include <assert.h>
-#include "../kernelsrc/kyouko3-registers.h"
+#include "kyouko3-registers.h"
 
 
 
