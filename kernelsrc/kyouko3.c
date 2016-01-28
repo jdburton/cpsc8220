@@ -39,6 +39,15 @@ MODULE_AUTHOR("James Burton");
 
 struct cdev kyouko3_cdev;
 
+struct kyouko2_dma_hdr {
+
+	uint32_t address:14;
+	uint32_t count:10;
+	uint32_t opcode:8;
+
+} hdr;
+
+
 struct fifo_entry
 
 {

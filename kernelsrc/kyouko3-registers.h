@@ -4,19 +4,12 @@
 
 //
 
-#include <linux/types.h>
 
 #define KYOUKO3_CONTROL_SIZE (65536)
 
 // DMA header:
 
-struct kyouko2_dma_hdr {
 
-	uint32_t address:14;
-	uint32_t count:10;
-	uint32_t opcode:8;
-
-} hdr;
 
 #define VMODE _IOW(0xcc, 0,unsigned long)
 #define BIND_DMA _IOW(0xcc,1,unsigned long)
