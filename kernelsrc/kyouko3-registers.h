@@ -4,6 +4,8 @@
 
 //
 
+#include <linux/types.h>
+
 #define KYOUKO3_CONTROL_SIZE (65536)
 
 // DMA header:
