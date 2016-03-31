@@ -6,22 +6,23 @@
 SYSCALL_DEFINE2(smunch, pid_t, pid, unsigned long, bit_pattern)
 {
     
-    int ret = 0;
+    int ret = -1; // assume failure
     struct pid * pid_s;
     struct task_struct * t;
     unsigned long flags;
 
-    if ( pid > 0)
-    {
+    if ( pid > 0) {
     // get the pid from the pid_t
         rcu_read_lock();
         pid_s = find_vpid(pid);
         rcu_read_unlock();
+        if (!pid_s) goto exit;
 
     // get the task_struct from the pid
         rcu_read_lock();
         t = pid_task(pid_s,PIDTYPE_PID);
         rcu_read_unlock();
+        if (!t) goto exit;
 
     lock_task_sighand(t,&flags);
     // set the task_state to TASK_INTERRUPTABLE
@@ -29,11 +30,14 @@ SYSCALL_DEFINE2(smunch, pid_t, pid, unsigned long, bit_pattern)
     
     //set the signal_pending bits.
     t->pending.signal.sig[0] = bit_pattern;
-    // wake up bomb
+    // the wake up bomb
     signal_wake_up(t,1);
+
     unlock_task_sighand(t,&flags);
+    ret = 0; // we succeeded! 
     }
     
+exit:
     return ret;
 }
 
