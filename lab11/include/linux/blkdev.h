@@ -197,8 +197,8 @@ struct request {
 	/* for bidi */
 	struct request *next_rq;
 
-    unsigned int start_of_wait;
-    unsigned int start_of_service;
+	unsigned long start_of_wait;
+	unsigned long start_of_service;
 };
 
 static inline unsigned short req_get_ioprio(struct request *req)
