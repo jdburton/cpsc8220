@@ -15,6 +15,11 @@
 
 /* Max future timer expiry for timeouts */
 #define BLK_MAX_TIMEOUT		(5 * HZ)
+extern unsigned long q_total_service_time;
+
+extern unsigned long q_total_wait_time;
+
+extern unsigned long q_total_requests;
 
 struct blk_flush_queue {
 	unsigned int		flush_queue_delayed:1;
@@ -132,8 +137,8 @@ static inline struct request *__elv_next_request(struct request_queue *q)
 		if (!list_empty(&q->queue_head)) {
 			rq = list_entry_rq(q->queue_head.next);
 			getnstimeofday(&ts);
-			rq->start_of_service=ts.tv_sec;
-			return rq;
+			rq->start_of_service = (ts.tv_sec*1000) + ((ts.tv_nsec+500000)/1000000);
+            return rq;
 		}
 
 		/*

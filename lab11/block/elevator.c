@@ -46,6 +46,14 @@
 static DEFINE_SPINLOCK(elv_list_lock);
 static LIST_HEAD(elv_list);
 
+unsigned long q_total_service_time;
+EXPORT_SYMBOL(q_total_service_time);
+
+unsigned long q_total_wait_time;
+EXPORT_SYMBOL(q_total_wait_time);
+
+unsigned long q_total_requests;
+EXPORT_SYMBOL(q_total_requests);
 /*
  * Merge hash stuff.
  */
@@ -596,7 +604,7 @@ void __elv_add_request(struct request_queue *q, struct request *rq, int where)
 {
 	struct timespec ts;
     getnstimeofday(&ts);
-    rq->start_of_wait = ts.tv_sec;
+    rq->start_of_wait = (ts.tv_sec*1000) + ((ts.tv_nsec+500000)/1000000);
     trace_block_rq_insert(q, rq);
 
 	blk_pm_add_request(q, rq);

@@ -78,6 +78,12 @@ enum rq_cmd_type_bits {
 
 #define BLK_MAX_CDB	16
 
+extern unsigned long q_total_service_time;
+
+extern unsigned long q_total_wait_time;
+
+extern unsigned long q_total_requests;
+
 /*
  * Try to put the fields that are referenced together in the same cacheline.
  *

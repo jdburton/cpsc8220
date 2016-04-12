@@ -2621,7 +2621,8 @@ EXPORT_SYMBOL_GPL(blk_unprep_request);
  */
 void blk_finish_request(struct request *req, int error)
 {
-	struct timespec fr_ts;
+	struct timespec fn_ts;
+    unsigned long finish_time;
     if (req->cmd_flags & REQ_QUEUED)
 		blk_queue_end_tag(req->q, req);
 
@@ -2646,6 +2647,11 @@ void blk_finish_request(struct request *req, int error)
 		__blk_put_request(req->q, req);
 	}
     getnstimeofday(&fn_ts);
+    finish_time = (fn_ts.tv_sec*1000) + ((fn_ts.tv_nsec+500000)/1000000);
+    q_total_service_time += finish_time - req->start_of_service;
+    q_total_wait_time += req->start_of_service - req->start_of_wait;
+    q_total_requests++;
+
 }
 EXPORT_SYMBOL(blk_finish_request);
 
