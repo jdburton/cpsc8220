@@ -595,7 +595,7 @@ void __elv_add_request(struct request_queue *q, struct request *rq, int where)
 {
 	struct timespec ts;
     getnstimeofday(&ts);
-    rq->start_of_wait = ((ts.tv_sec-q_reset_time.tv_sec)*1000) + ((ts.tv_nsec)/1000000);
+    rq->start_of_wait = ((ts.tv_sec-TIME_WARP)*1000) + ((ts.tv_nsec)/1000000);
     trace_block_rq_insert(q, rq);
 
 	blk_pm_add_request(q, rq);

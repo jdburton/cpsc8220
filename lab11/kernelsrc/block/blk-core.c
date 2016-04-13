@@ -64,8 +64,6 @@ struct kmem_cache *blk_requestq_cachep;
 static struct workqueue_struct *kblockd_workqueue;
 
 
-struct timespec q_reset_time;
-EXPORT_SYMBOL(q_reset_time);
 
 unsigned long q_total_service_time;
 EXPORT_SYMBOL(q_total_service_time);
@@ -2660,8 +2658,8 @@ void blk_finish_request(struct request *req, int error)
 		__blk_put_request(req->q, req);
 	}
     getnstimeofday(&fn_ts);
-    finish_time = ((fn_ts.tv_sec-q_reset_time.tv_sec)*1000) + ((fn_ts.tv_nsec)/1000000);
-    if (!(q_total_requests % 1000)) printk( KERN_ALERT "Request: %u, Start Wait %u, Start Service %u, Finish Time %u\n", q_total_requests, req->start_of_wait, req->start_of_service, finish_time); 
+    finish_time = ((fn_ts.tv_sec-TIME_WARP)*1000) + ((fn_ts.tv_nsec)/1000000);
+    if (!(q_total_requests % 1000)) printk( KERN_ALERT "Request: %lu, Start Wait %lu, Start Service %lu, Finish Time %lu\n", q_total_requests, req->start_of_wait, req->start_of_service, finish_time); 
     q_total_service_time += (finish_time - req->start_of_service);
     q_total_wait_time += (req->start_of_service - req->start_of_wait);
     q_total_requests++;
