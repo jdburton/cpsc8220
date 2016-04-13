@@ -2660,9 +2660,14 @@ void blk_finish_request(struct request *req, int error)
     getnstimeofday(&fn_ts);
     finish_time = ((fn_ts.tv_sec-TIME_WARP)*1000) + ((fn_ts.tv_nsec)/1000000);
     if (!(q_total_requests % 1000)) printk( KERN_ALERT "Request: %lu, Start Wait %lu, Start Service %lu, Finish Time %lu\n", q_total_requests, req->start_of_wait, req->start_of_service, finish_time); 
-    q_total_service_time += (finish_time - req->start_of_service);
-    q_total_wait_time += (req->start_of_service - req->start_of_wait);
-    q_total_requests++;
+    if (req->start_of_service && req->start_of_wait && finish_time) {
+        q_total_service_time += (finish_time - req->start_of_service);
+        q_total_wait_time += (req->start_of_service - req->start_of_wait);
+        q_total_requests++;
+    } else
+    {
+        printk( KERN_ALERT "Something didn't get timestamped!\n");
+    }
 
 }
 EXPORT_SYMBOL(blk_finish_request);
