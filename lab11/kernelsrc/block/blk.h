@@ -138,7 +138,7 @@ static inline struct request *__elv_next_request(struct request_queue *q)
 		if (!list_empty(&q->queue_head)) {
 			rq = list_entry_rq(q->queue_head.next);
 			getnstimeofday(&ts);
-			rq->start_of_service = ((ts.tv_sec-q_reset_time.tv_sec)*1000) + ((ts.tv_nsec+500000)/1000000);
+			rq->start_of_service = ((ts.tv_sec-q_reset_time.tv_sec)*1000) + ((ts.tv_nsec)/1000000);
             return rq;
 		}
 
