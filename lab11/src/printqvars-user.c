@@ -10,6 +10,6 @@ int main()
     unsigned long wait_time, service_time, num_req;
     getqvars(&wait_time,&service_time,&num_req);
 
-    printf("After %d requests: Total wait time = %d ms; Total service time = %d ms\n",num_req,wait_time,service_time);
+    printf("After %u requests: Total wait time = %u ms; Total service time = %u ms\n",num_req,wait_time,service_time);
     return 0;
 }
