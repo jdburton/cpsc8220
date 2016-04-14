@@ -86,7 +86,7 @@ extern unsigned long q_total_wait_time;
 extern unsigned long q_total_requests;
 extern unsigned long q_bad_requests;
 
-static inline unsigned long timespec2ms(timespec ts)
+static inline unsigned long timespec2ms(struct timespec ts)
 {
     return (ts.tv_sec * 1000) + (ts.tv_nsec/1000000);
 }
