@@ -23,6 +23,7 @@
 #include <linux/rcupdate.h>
 #include <linux/percpu-refcount.h>
 #include <linux/scatterlist.h>
+#include <linux/time.h>
 
 struct module;
 struct scsi_ioctl_command;
@@ -83,6 +84,13 @@ extern unsigned long q_total_service_time;
 extern unsigned long q_total_wait_time;
 
 extern unsigned long q_total_requests;
+extern unsigned long q_bad_requests;
+
+static inline unsigned long timespec2ms(timespec ts)
+{
+    return (ts.tv_sec * 1000) + (ts.tv_nsec/1000000);
+}
+
 
 /*
  * Try to put the fields that are referenced together in the same cacheline.

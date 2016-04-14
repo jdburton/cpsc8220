@@ -74,6 +74,9 @@ EXPORT_SYMBOL(q_total_wait_time);
 unsigned long q_total_requests;
 EXPORT_SYMBOL(q_total_requests);
 
+unsigned long q_bad_requests;
+EXPORT_SYMBOL(q_bad_requests);
+
 static void blk_clear_congested(struct request_list *rl, int sync)
 {
 #ifdef CONFIG_CGROUP_WRITEBACK
@@ -838,7 +841,8 @@ EXPORT_SYMBOL(blk_get_queue);
 
 static inline void blk_free_request(struct request_list *rl, struct request *rq)
 {
-	if (rq->cmd_flags & REQ_ELVPRIV) {
+	
+    if (rq->cmd_flags & REQ_ELVPRIV) {
 		elv_put_request(rl->q, rq);
 		if (rq->elv.icq)
 			put_io_context(rq->elv.icq->ioc);
@@ -2379,6 +2383,7 @@ void blk_dequeue_request(struct request *rq)
 {
 	struct request_queue *q = rq->q;
 
+
 	BUG_ON(list_empty(&rq->queuelist));
 	BUG_ON(ELV_ON_HASH(rq));
 
@@ -2657,16 +2662,20 @@ void blk_finish_request(struct request *req, int error)
 
 		__blk_put_request(req->q, req);
 	}
+    if (req->cmd_type != REQ_TYPE_FS){
+        return;
+    }
     getnstimeofday(&fn_ts);
-    finish_time = ((fn_ts.tv_sec-TIME_WARP)*1000) + ((fn_ts.tv_nsec)/1000000);
-    if (!(q_total_requests % 1000)) printk( KERN_ALERT "Request: %lu, Start Wait %lu, Start Service %lu, Finish Time %lu\n", q_total_requests, req->start_of_wait, req->start_of_service, finish_time); 
+    finish_time = timespec2ms(fn_ts);
+    
     if (req->start_of_service && req->start_of_wait && finish_time) {
         q_total_service_time += (finish_time - req->start_of_service);
         q_total_wait_time += (req->start_of_service - req->start_of_wait);
         q_total_requests++;
     } else
     {
-        printk( KERN_ALERT "Something didn't get timestamped!\n");
+        //printk( KERN_ALERT "lab11: No timestamp! cmd %s, cmd_type %d, cpu %d, start %llu, data_len %u, sector %lu, Start Wait %lu, start_io  %llu, Start Service %lu, Finish Time %lu\n", req->__cmd, req->cmd_type, req->cpu, req->start_time_ns, req->__data_len, req->__sector, req->start_of_wait, req->io_start_time_ns, req->start_of_service, finish_time);
+        q_bad_requests++;
     }
 
 }
@@ -3011,7 +3020,6 @@ int blk_rq_prep_clone(struct request *rq, struct request *rq_src,
 		      void *data)
 {
 	struct bio *bio, *bio_src;
-
 	if (!bs)
 		bs = fs_bio_set;
 
